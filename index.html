@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101a2e">
+  <title>Ghost Data Audit | Northstar Shop</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18243a;
+      --muted: #68758b;
+      --line: #e3e8f0;
+      --paper: #ffffff;
+      --canvas: #f4f6fa;
+      --navy: #101a2e;
+      --blue: #315ee8;
+      --green: #16845b;
+      --amber: #a96509;
+      --red: #9b3445;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .topbar {
+      align-items: center;
+      background: var(--navy);
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      min-height: 68px;
+      padding: 0 max(24px, calc((100vw - 1220px) / 2));
+    }
+    .brand { align-items: center; display: flex; gap: 12px; font-weight: 700; letter-spacing: -.02em; }
+    .brand-mark {
+      align-items: center; background: #2848a8; border-radius: 11px; display: flex;
+      height: 36px; justify-content: center; width: 36px;
+    }
+    .brand-mark svg { height: 21px; width: 21px; }
+    .top-note { color: #b9c5d9; font-size: 13px; }
+    main { margin: 0 auto; max-width: 1220px; padding: 38px 24px 60px; }
+    .eyebrow { color: var(--blue); font-size: 12px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { font-size: clamp(28px, 4vw, 39px); letter-spacing: -.045em; line-height: 1.1; margin: 9px 0 10px; }
+    .intro { color: var(--muted); margin: 0; max-width: 760px; }
+    .notice {
+      background: #fff9e9; border: 1px solid #f0dfb6; border-radius: 10px; color: #75510d;
+      font-size: 13px; margin: 23px 0 24px; padding: 12px 15px;
+    }
+    .stats { display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 24px 0; }
+    .stat { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 17px 18px; }
+    .stat-label { color: var(--muted); font-size: 13px; }
+    .stat-value { font-size: 28px; font-weight: 750; letter-spacing: -.04em; margin-top: 4px; }
+    .stat.complete .stat-value { color: var(--green); }
+    .stat.incomplete .stat-value { color: var(--amber); }
+    .stat.na .stat-value { color: #52627c; }
+    .workspace { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+    .toolbar {
+      align-items: center; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap;
+      gap: 13px; justify-content: space-between; padding: 16px 18px;
+    }
+    .filters { display: flex; flex-wrap: wrap; gap: 7px; }
+    .filter {
+      background: #fff; border: 1px solid var(--line); border-radius: 8px; color: #536078;
+      font-size: 13px; font-weight: 650; padding: 8px 11px;
+    }
+    .filter[aria-pressed="true"] { background: #edf1ff; border-color: #cbd5ff; color: #294ac0; }
+    .search-wrap { flex: 1 1 230px; max-width: 330px; position: relative; }
+    .search-wrap svg { color: #7a8698; height: 17px; left: 11px; position: absolute; top: 11px; width: 17px; }
+    .search {
+      background: #fff; border: 1px solid var(--line); border-radius: 8px; outline: none;
+      padding: 9px 12px 9px 36px; width: 100%;
+    }
+    .search:focus { border-color: #8ba2ff; box-shadow: 0 0 0 3px #315ee81a; }
+    .table-scroll { overflow-x: auto; }
+    table { border-collapse: collapse; min-width: 620px; text-align: left; width: 100%; }
+    th { background: #fbfcfe; color: #758097; font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    th, td { border-bottom: 1px solid #edf0f5; padding: 13px 18px; }
+    tbody tr { transition: background .12s ease; }
+    tbody tr:hover { background: #f8faff; }
+    td:first-child { font-variant-numeric: tabular-nums; font-weight: 650; }
+    .badge { border-radius: 99px; display: inline-flex; font-size: 11px; font-weight: 750; letter-spacing: .025em; padding: 4px 9px; white-space: nowrap; }
+    .badge.complete { background: #e7f6ef; color: #126b49; }
+    .badge.incomplete { background: #fff3df; color: #8b5200; }
+    .badge.not-applicable { background: #edf0f5; color: #536078; }
+    .step-count { color: var(--muted); }
+    .open-button { background: transparent; border: 0; color: var(--blue); font-size: 13px; font-weight: 700; padding: 4px 0; }
+    .open-button:hover { text-decoration: underline; }
+    .table-footer { align-items: center; color: var(--muted); display: flex; font-size: 13px; justify-content: space-between; padding: 13px 18px; }
+    .pager { display: flex; gap: 7px; }
+    .pager button, .download {
+      background: #fff; border: 1px solid var(--line); border-radius: 7px; color: var(--ink);
+      font-size: 13px; padding: 7px 11px;
+    }
+    .pager button:disabled { color: #aab2c0; cursor: not-allowed; }
+    .download { align-items: center; display: inline-flex; gap: 7px; text-decoration: none; }
+    .download:hover, .pager button:not(:disabled):hover { background: #f7f8fb; }
+    .empty, .loading, .error { color: var(--muted); padding: 42px 20px; text-align: center; }
+    .error { color: #9b3445; }
+    .drawer-backdrop {
+      background: #111a2b77; inset: 0; opacity: 0; position: fixed; transition: opacity .18s ease;
+      visibility: hidden; z-index: 5;
+    }
+    .drawer-backdrop.open { opacity: 1; visibility: visible; }
+    .drawer {
+      background: #fff; bottom: 0; box-shadow: -12px 0 48px #101a2e1a; max-width: 630px;
+      overflow-y: auto; padding: 27px; position: fixed; right: 0; top: 0; transform: translateX(100%);
+      transition: transform .2s ease; visibility: hidden; width: min(100%, 630px); z-index: 6;
+    }
+    .drawer.open { transform: translateX(0); visibility: visible; }
+    .drawer-head { align-items: flex-start; display: flex; justify-content: space-between; }
+    .drawer h2 { font-size: 25px; letter-spacing: -.035em; margin: 5px 0 9px; }
+    .close {
+      align-items: center; background: #f2f4f8; border: 0; border-radius: 50%; color: #526078;
+      display: flex; font-size: 22px; height: 36px; justify-content: center; width: 36px;
+    }
+    .drawer-meta { align-items: center; color: var(--muted); display: flex; flex-wrap: wrap; gap: 10px; }
+    .step-list { display: grid; gap: 11px; margin-top: 25px; }
+    .step {
+      border: 1px solid var(--line); border-radius: 11px; padding: 14px 15px;
+    }
+    .step-top { align-items: center; display: flex; gap: 9px; margin-bottom: 11px; }
+    .step-number { align-items: center; background: #edf1ff; border-radius: 50%; color: #3154cc; display: inline-flex; font-size: 12px; font-weight: 750; height: 25px; justify-content: center; width: 25px; }
+    .phase { color: #5e6b82; font-size: 11px; font-weight: 750; letter-spacing: .07em; }
+    .step-operation { font-size: 14px; font-weight: 700; }
+    .step-grid { display: grid; gap: 8px 15px; grid-template-columns: 1fr 1fr; }
+    .step-field { min-width: 0; }
+    .step-field span { color: #8791a3; display: block; font-size: 11px; margin-bottom: 2px; }
+    .step-field strong { font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+    .step-evidence { color: #3154cc; }
+    footer { color: #8791a3; font-size: 12px; margin-top: 20px; text-align: center; }
+    @media (max-width: 700px) {
+      main { padding: 28px 15px 42px; }
+      .topbar { padding: 0 15px; }
+      .top-note { font-size: 11px; }
+      .stats { gap: 9px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stat { padding: 13px; }
+      .stat-value { font-size: 24px; }
+      .toolbar { align-items: stretch; }
+      .search-wrap { max-width: none; }
+      .table-footer { align-items: flex-start; flex-direction: column; gap: 10px; }
+      .drawer { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12s3.2-6 9-6 9 6 9 6-3.2 6-9 6-9-6-9-6Z" stroke="white" stroke-width="1.7"/><circle cx="12" cy="12" r="2.7" stroke="white" stroke-width="1.7"/><path d="m5 4 14 16" stroke="#8fa9ff" stroke-width="1.7"/></svg>
+      </span>
+      <span>Northstar <span style="font-weight:450;color:#b9c5d9">/ Privacy audit</span></span>
+    </div>
+    <span class="top-note">Ghost Data Still Exists</span>
+  </header>
+  <main>
+    <div class="eyebrow">Deletion audit workspace</div>
+    <h1>Find what “deleted” left behind.</h1>
+    <p class="intro">Review the audit results across customer records, sync processes, and restore paths. Select any case to inspect its findings, recommended actions, and verification steps.</p>
+    <div class="notice"><strong>Results viewer:</strong> This browser app displays the generated audit CSV. It does not run a new audit or change customer data. Run the Python audit locally to refresh results before redeploying.</div>
+    <section class="stats" aria-label="Audit summary">
+      <div class="stat"><div class="stat-label">Cases reviewed</div><div class="stat-value" id="total-count">—</div></div>
+      <div class="stat complete"><div class="stat-label">Complete</div><div class="stat-value" id="complete-count">—</div></div>
+      <div class="stat incomplete"><div class="stat-label">Needs action</div><div class="stat-value" id="incomplete-count">—</div></div>
+      <div class="stat na"><div class="stat-label">Not applicable</div><div class="stat-value" id="na-count">—</div></div>
+    </section>
+    <section class="workspace" aria-label="Audit cases">
+      <div class="toolbar">
+        <div class="filters" role="group" aria-label="Filter by deletion status">
+          <button class="filter" data-filter="ALL" aria-pressed="true">All cases</button>
+          <button class="filter" data-filter="INCOMPLETE" aria-pressed="false">Needs action</button>
+          <button class="filter" data-filter="COMPLETE" aria-pressed="false">Complete</button>
+          <button class="filter" data-filter="NOT_APPLICABLE" aria-pressed="false">Not applicable</button>
+        </div>
+        <label class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input id="search" class="search" type="search" placeholder="Search case, system, resource…" aria-label="Search audit cases">
+        </label>
+        <a class="download" href="./output.csv" download="output.csv">Download CSV</a>
+      </div>
+      <div id="table-container"><div class="loading">Loading audit results…</div></div>
+    </section>
+    <footer>Static demonstration of the generated audit output · No live customer systems are connected</footer>
+  </main>
+  <div class="drawer-backdrop" id="backdrop"></div>
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true">
+    <div class="drawer-head">
+      <div>
+        <div class="eyebrow">Case details</div>
+        <h2 id="drawer-title">Audit case</h2>
+        <div class="drawer-meta" id="drawer-meta"></div>
+      </div>
+      <button class="close" id="close-drawer" aria-label="Close case details">&times;</button>
+    </div>
+    <div class="step-list" id="step-list"></div>
+  </aside>
+  <script>
+    const pageSize = 12;
+    let cases = [];
+    let activeFilter = "ALL";
+    let query = "";
+    let page = 1;
+    const statusLabel = {
+      COMPLETE: "Complete",
+      INCOMPLETE: "Needs action",
+      NOT_APPLICABLE: "Not applicable"
+    };
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[char]);
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let quoted = false;
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+        if (quoted) {
+          if (char === '"' && text[i + 1] === '"') {
+            field += '"';
+            i += 1;
+          } else if (char === '"') {
+            quoted = false;
+          } else {
+            field += char;
+          }
+        } else if (char === '"' && field.length === 0) {
+          quoted = true;
+        } else if (char === ",") {
+          row.push(field);
+          field = "";
+        } else if (char === "\n") {
+          row.push(field.replace(/\r$/, ""));
+          rows.push(row);
+          row = [];
+          field = "";
+        } else {
+          field += char;
+        }
+      }
+      if (field.length || row.length) {
+        row.push(field.replace(/\r$/, ""));
+        rows.push(row);
+      }
+      const [header, ...data] = rows;
+      if (!header || header.join(",") !== "case_id,deletion_status,steps_json") {
+        throw new Error("The CSV must have case_id, deletion_status, steps_json columns.");
+      }
+      return data.filter((values) => values.length >= 3).map((values) => ({
+        caseId: values[0],
+        status: values[1],
+        steps: JSON.parse(values[2])
+      }));
+    }
+
+    function badgeClass(status) {
+      return status.toLowerCase().replaceAll("_", "-");
+    }
+
+    function matchingCases() {
+      const needle = query.trim().toLowerCase();
+      return cases.filter((item) => {
+        if (activeFilter !== "ALL" && item.status !== activeFilter) return false;
+        if (!needle) return true;
+        return `${item.caseId} ${item.status} ${JSON.stringify(item.steps)}`.toLowerCase().includes(needle);
+      });
+    }
+
+    function renderTable() {
+      const container = document.getElementById("table-container");
+      const filtered = matchingCases();
+      const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+      page = Math.min(page, pages);
+      const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
+      if (!visible.length) {
+        container.innerHTML = '<div class="empty">No cases match this search.</div>';
+        return;
+      }
+      const body = visible.map((item) => `
+        <tr>
+          <td>${escapeHtml(item.caseId)}</td>
+          <td><span class="badge ${badgeClass(item.status)}">${escapeHtml(statusLabel[item.status] || item.status)}</span></td>
+          <td class="step-count">${item.steps.length} ${item.steps.length === 1 ? "step" : "steps"}</td>
+          <td><button class="open-button" data-case="${escapeHtml(item.caseId)}">View details <span aria-hidden="true">→</span></button></td>
+        </tr>`).join("");
+      container.innerHTML = `
+        <div class="table-scroll"><table>
+          <thead><tr><th>Case ID</th><th>Deletion status</th><th>Audit steps</th><th></th></tr></thead>
+          <tbody>${body}</tbody>
+        </table></div>
+        <div class="table-footer">
+          <span>Showing ${filtered.length ? (page - 1) * pageSize + 1 : 0}–${Math.min(page * pageSize, filtered.length)} of ${filtered.length} cases</span>
+          <div class="pager"><button id="previous" ${page <= 1 ? "disabled" : ""}>Previous</button><button id="next" ${page >= pages ? "disabled" : ""}>Next</button></div>
+        </div>`;
+      container.querySelectorAll("[data-case]").forEach((button) => {
+        button.addEventListener("click", () => openCase(button.dataset.case));
+      });
+      document.getElementById("previous").addEventListener("click", () => { page -= 1; renderTable(); });
+      document.getElementById("next").addEventListener("click", () => { page += 1; renderTable(); });
+    }
+
+    function openCase(caseId) {
+      const item = cases.find((candidate) => candidate.caseId === caseId);
+      if (!item) return;
+      document.getElementById("drawer-title").textContent = item.caseId;
+      document.getElementById("drawer-meta").innerHTML =
+        `<span class="badge ${badgeClass(item.status)}">${escapeHtml(statusLabel[item.status] || item.status)}</span><span>${item.steps.length} audit ${item.steps.length === 1 ? "step" : "steps"}</span>`;
+      const list = document.getElementById("step-list");
+      if (!item.steps.length) {
+        list.innerHTML = '<div class="empty">No audit steps. This request did not authorize deletion.</div>';
+      } else {
+        list.innerHTML = item.steps.map((step) => `
+          <article class="step">
+            <div class="step-top">
+              <span class="step-number">${escapeHtml(step.step_no)}</span>
+              <span class="phase">${escapeHtml(step.phase)}</span>
+              <span class="step-operation">${escapeHtml(step.operation.replaceAll("_", " "))}</span>
+            </div>
+            <div class="step-grid">
+              <div class="step-field"><span>System</span><strong>${escapeHtml(step.system_id)}</strong></div>
+              <div class="step-field"><span>Resource</span><strong>${escapeHtml(step.resource_id)}</strong></div>
+              <div class="step-field"><span>State</span><strong>${escapeHtml(step.state)}</strong></div>
+              <div class="step-field"><span>Evidence</span><strong class="step-evidence">${escapeHtml(step.evidence_id || "Future action — no evidence yet")}</strong></div>
+            </div>
+          </article>`).join("");
+      }
+      document.getElementById("drawer").classList.add("open");
+      document.getElementById("drawer").setAttribute("aria-hidden", "false");
+      document.getElementById("backdrop").classList.add("open");
+      document.getElementById("close-drawer").focus();
+    }
+
+    function closeCase() {
+      document.getElementById("drawer").classList.remove("open");
+      document.getElementById("drawer").setAttribute("aria-hidden", "true");
+      document.getElementById("backdrop").classList.remove("open");
+    }
+
+    document.querySelectorAll(".filter").forEach((button) => {
+      button.addEventListener("click", () => {
+        activeFilter = button.dataset.filter;
+        page = 1;
+        document.querySelectorAll(".filter").forEach((filter) => {
+          filter.setAttribute("aria-pressed", String(filter === button));
+        });
+        renderTable();
+      });
+    });
+    document.getElementById("search").addEventListener("input", (event) => {
+      query = event.target.value;
+      page = 1;
+      renderTable();
+    });
+    document.getElementById("close-drawer").addEventListener("click", closeCase);
+    document.getElementById("backdrop").addEventListener("click", closeCase);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeCase();
+    });
+
+    fetch("./output.csv")
+      .then((response) => {
+        if (!response.ok) throw new Error(`Could not load output.csv (HTTP ${response.status}).`);
+        return response.text();
+      })
+      .then((text) => {
+        cases = parseCsv(text);
+        const counts = cases.reduce((result, item) => {
+          result[item.status] = (result[item.status] || 0) + 1;
+          return result;
+        }, {});
+        document.getElementById("total-count").textContent = cases.length;
+        document.getElementById("complete-count").textContent = counts.COMPLETE || 0;
+        document.getElementById("incomplete-count").textContent = counts.INCOMPLETE || 0;
+        document.getElementById("na-count").textContent = counts.NOT_APPLICABLE || 0;
+        renderTable();
+      })
+      .catch((error) => {
+        document.getElementById("table-container").innerHTML =
+          `<div class="error">${escapeHtml(error.message)} Make sure output.csv is in the same folder.</div>`;
+      });
+  </script>
+</body>
+</html>
